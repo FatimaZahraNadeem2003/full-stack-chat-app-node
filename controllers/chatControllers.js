@@ -1,6 +1,7 @@
-const asyncHandler = require('express-async-handler')
+const asyncHandler = require('express-async-handler');
 const Chat = require('../models/chatModel');
 const User = require('../models/userModel');
+const Message = require('../models/messageModel');
 
 const accessChat = asyncHandler(async (req,res) =>{
     const {userId} = req.body;
@@ -166,4 +167,24 @@ const removeFromGroup = asyncHandler(async (req,res)=>{
     }
 })
 
-module.exports = {accessChat, fetchChat, createGroup, renameGroup, addToGroup, removeFromGroup}
+const markChatAsRead = asyncHandler(async (req, res) => {
+    try {
+        const { chatId } = req.params;
+        
+        await Message.updateMany(
+            { 
+                chat: chatId, 
+                sender: { $ne: req.user._id },
+                isRead: { $ne: true }
+            },
+            { $set: { isRead: true } }
+        );
+        
+        res.json({ message: 'Chat marked as read' });
+    } catch (error) {
+        res.status(400);
+        throw new Error(error.message);
+    }
+});
+
+module.exports = {accessChat, fetchChat, createGroup, renameGroup, addToGroup, removeFromGroup, markChatAsRead}
