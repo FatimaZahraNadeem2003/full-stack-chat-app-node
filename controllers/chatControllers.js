@@ -106,6 +106,18 @@ const createGroup = asyncHandler(async (req, res)=>{
 const renameGroup = asyncHandler(async (req,res)=>{
     const {chatId, chatName} = req.body;
 
+    // Check if user is group admin
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+        res.status(404);
+        throw new Error("Chat Not Found");
+    }
+    
+    if (chat.groupAdmin.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error("Only group admin can rename the group");
+    }
+
     const updatedChat = await Chat.findByIdAndUpdate(
         chatId,
         {
@@ -128,6 +140,18 @@ const renameGroup = asyncHandler(async (req,res)=>{
 const addToGroup = asyncHandler(async(req,res)=>{
     const {chatId, userId} = req.body;
 
+    // Check if user is group admin
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+        res.status(404);
+        throw new Error("Chat Not Found");
+    }
+    
+    if (chat.groupAdmin.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error("Only group admin can add users");
+    }
+
     const added = await Chat.findByIdAndUpdate(
         chatId,
         {
@@ -149,6 +173,19 @@ const addToGroup = asyncHandler(async(req,res)=>{
 const removeFromGroup = asyncHandler(async (req,res)=>{
     const {chatId, userId} = req.body;
 
+    // Check if user is group admin
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+        res.status(404);
+        throw new Error("Chat Not Found");
+    }
+    
+    // Allow users to remove themselves
+    if (userId !== req.user._id.toString() && chat.groupAdmin.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error("Only group admin can remove other users");
+    }
+
     const removed = await Chat.findByIdAndUpdate(
         chatId,
         {
@@ -166,6 +203,28 @@ const removeFromGroup = asyncHandler(async (req,res)=>{
         res.json(removed)
     }
 })
+
+// Add function to delete group
+const deleteGroup = asyncHandler(async (req, res) => {
+    const { chatId } = req.body;
+
+    // Check if user is group admin
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+        res.status(404);
+        throw new Error("Chat Not Found");
+    }
+    
+    if (chat.groupAdmin.toString() !== req.user._id.toString()) {
+        res.status(403);
+        throw new Error("Only group admin can delete the group");
+    }
+
+    // Delete the chat
+    await Chat.findByIdAndDelete(chatId);
+    
+    res.json({ message: 'Group deleted successfully' });
+});
 
 const markChatAsRead = asyncHandler(async (req, res) => {
     try {
@@ -187,4 +246,4 @@ const markChatAsRead = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = {accessChat, fetchChat, createGroup, renameGroup, addToGroup, removeFromGroup, markChatAsRead}
+module.exports = {accessChat, fetchChat, createGroup, renameGroup, addToGroup, removeFromGroup, markChatAsRead, deleteGroup}
