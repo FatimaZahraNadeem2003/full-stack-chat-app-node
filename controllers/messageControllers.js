@@ -43,7 +43,6 @@ const sendMessage = asyncHandler(async(req,res) => {
 const allMessages = asyncHandler(async (req,res) =>{
     try {
         const messages = await Message.find({chat: req.params.chatId}).populate('sender','name pic email').populate('chat');
-
         res.json(messages);
     } catch (error) {
         res.status(400);
@@ -51,4 +50,27 @@ const allMessages = asyncHandler(async (req,res) =>{
     }
 })
 
-module.exports = {sendMessage, allMessages}
+const deleteMessage = asyncHandler(async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.messageId);
+        
+        if (!message) {
+            res.status(404);
+            throw new Error('Message not found');
+        }
+        
+       if (message.sender.toString() !== req.user._id.toString()) {
+            res.status(401);
+            throw new Error('You can only delete your own messages');
+        }
+        
+        await Message.findByIdAndDelete(req.params.messageId);
+        
+        res.json({ message: 'Message deleted successfully' });
+    } catch (error) {
+        res.status(400);
+        throw new Error(error.message);
+    }
+})
+
+module.exports = {sendMessage, allMessages, deleteMessage}
