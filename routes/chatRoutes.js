@@ -10,7 +10,7 @@ router.route('/group').post(protect,createGroup);
 router.route('/rename').put(protect,renameGroup);
 router.route('/groupadd').put(protect,addToGroup);
 router.route('/groupremove').put(protect,removeFromGroup);
-router.route('/groupdelete').delete(protect,deleteGroup); // Add delete route
+router.route('/groupdelete').delete(protect,deleteGroup); 
 router.route('/:chatId/read').put(protect, markChatAsRead);
 
 module.exports = router;

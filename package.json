@@ -13,13 +13,16 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "express": "^4.19.2",
-    "dotenv": "^16.4.5",
-    "mongoose": "^8.5.0",
-    "colors": "^1.4.0",
-    "jsonwebtoken": "^9.0.2",
     "bcryptjs": "^2.4.3",
+    "colors": "^1.4.0",
+    "dotenv": "^16.4.5",
+    "emoji-picker-react": "^4.17.3",
+    "express": "^4.19.2",
     "express-async-handler": "^1.2.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.5.0",
+    "multer": "^2.0.2",
+    "react-emoji-picker": "^1.0.13",
     "socket.io": "^4.7.5"
   },
   "devDependencies": {
