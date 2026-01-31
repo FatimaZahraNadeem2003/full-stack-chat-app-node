@@ -140,4 +140,22 @@ const createGuestUser = asyncHandler(async (req, res) => {
    }
 });
 
-module.exports = {registerUser, authUser, allUsers, createGuestUser, updateUserProfile};
+const changePassword = asyncHandler(async (req, res) => {
+   const { oldPassword, newPassword } = req.body;
+
+   const user = await User.findById(req.user._id);
+
+   if(user && (await user.matchPassword(oldPassword))) {
+      user.password = newPassword;
+      const updatedUser = await user.save();
+      
+      res.json({
+         message: 'Password changed successfully'
+      });
+   } else {
+      res.status(400);
+      throw new Error('Invalid current password');
+   }
+});
+
+module.exports = {registerUser, authUser, allUsers, createGuestUser, updateUserProfile, changePassword};

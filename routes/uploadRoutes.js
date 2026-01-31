@@ -82,7 +82,12 @@ router.post('/', (req, res, next) => {
       console.log('API key:', cloudinary.config().api_key);
       console.log('API secret:', cloudinary.config().api_secret ? '***' + cloudinary.config().api_secret.slice(-4) : 'undefined');
       
-      const uploadStream = cloudinary.uploader.upload_stream(
+      // Convert buffer to base64
+      const base64String = req.file.buffer.toString('base64');
+      const fileUri = `data:${req.file.mimetype};base64,${base64String}`;
+      
+      cloudinary.uploader.upload(
+        fileUri,
         { resource_type: 'auto' },
         (error, result) => {
           if (error) {
@@ -101,8 +106,6 @@ router.post('/', (req, res, next) => {
           });
         }
       );
-      
-      uploadStream.end(req.file.buffer);
       
     } catch (error) {
       console.error('Upload error:', error);
