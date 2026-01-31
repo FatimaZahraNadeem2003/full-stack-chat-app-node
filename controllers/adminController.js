@@ -110,4 +110,20 @@ const deleteUser = asyncHandler(async (req, res) => {
     }
 });
 
-module.exports = { adminLogin, registerAdmin, getAllUsers, getAllChats, deleteUser };
+const getAllMessages = asyncHandler(async (req, res) => {
+    try {
+        const { chatId } = req.params;
+        
+        const messages = await Message.find({ chat: chatId })
+            .populate('sender', 'name pic email')
+            .populate('chat')
+            .sort({ createdAt: 1 });
+        
+        res.json(messages);
+    } catch (error) {
+        res.status(400);
+        throw new Error(error.message);
+    }
+});
+
+module.exports = { adminLogin, registerAdmin, getAllUsers, getAllChats, deleteUser, getAllMessages };
