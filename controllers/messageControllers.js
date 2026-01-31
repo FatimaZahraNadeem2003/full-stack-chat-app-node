@@ -70,17 +70,14 @@ const sendMessage = asyncHandler(async(req,res) => {
     
 const allMessages = asyncHandler(async (req,res) =>{
     try {
-        // Check if user is admin
         const isAdmin = req.user.isAdmin;
         
         if (isAdmin) {
-            // Admin can access any chat
             const messages = await Message.find({chat: req.params.chatId})
                 .populate('sender','name pic email')
                 .populate('chat');
             res.json(messages);
         } else {
-            // Regular user - check if they're part of the chat
             const chat = await Chat.findById(req.params.chatId);
             if (!chat) {
                 res.status(404);

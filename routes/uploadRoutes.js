@@ -82,7 +82,6 @@ router.post('/', (req, res, next) => {
       console.log('API key:', cloudinary.config().api_key);
       console.log('API secret:', cloudinary.config().api_secret ? '***' + cloudinary.config().api_secret.slice(-4) : 'undefined');
       
-      // Convert buffer to base64
       const base64String = req.file.buffer.toString('base64');
       const fileUri = `data:${req.file.mimetype};base64,${base64String}`;
       
