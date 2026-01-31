@@ -70,10 +70,33 @@ const sendMessage = asyncHandler(async(req,res) => {
     
 const allMessages = asyncHandler(async (req,res) =>{
     try {
-        const messages = await Message.find({chat: req.params.chatId})
-            .populate('sender','name pic email')
-            .populate('chat');
-        res.json(messages);
+        // Check if user is admin
+        const isAdmin = req.user.isAdmin;
+        
+        if (isAdmin) {
+            // Admin can access any chat
+            const messages = await Message.find({chat: req.params.chatId})
+                .populate('sender','name pic email')
+                .populate('chat');
+            res.json(messages);
+        } else {
+            // Regular user - check if they're part of the chat
+            const chat = await Chat.findById(req.params.chatId);
+            if (!chat) {
+                res.status(404);
+                throw new Error('Chat not found');
+            }
+            
+            if (!chat.users.some(user => user._id.toString() === req.user._id.toString())) {
+                res.status(403);
+                throw new Error('You are not authorized to access this chat');
+            }
+            
+            const messages = await Message.find({chat: req.params.chatId})
+                .populate('sender','name pic email')
+                .populate('chat');
+            res.json(messages);
+        }
     } catch (error) {
         res.status(400);
         throw new Error(error.message);

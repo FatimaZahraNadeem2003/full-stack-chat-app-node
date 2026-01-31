@@ -85,7 +85,6 @@ const createGroup = asyncHandler(async (req, res)=>{
 
     users.push(req.user);
 
-    // Check for duplicate group name
     const groupExists = await Chat.findOne({
         chatName: { $regex: new RegExp(`^${req.body.name}$`, 'i') },
         isGroupChat: true
@@ -130,7 +129,6 @@ const renameGroup = asyncHandler(async (req,res)=>{
         throw new Error("Only group admin can rename the group");
     }
 
-    // Check for duplicate group name (excluding current group)
     const groupExists = await Chat.findOne({
         chatName: { $regex: new RegExp(`^${chatName}$`, 'i') },
         isGroupChat: true,

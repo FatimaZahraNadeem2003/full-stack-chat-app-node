@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const cloudinary = require('../config/cloudinary');
+const cloudinary = require('cloudinary').v2;
 
 const router = express.Router();
 
@@ -70,6 +70,17 @@ router.post('/', (req, res, next) => {
       }
 
       console.log('Uploading to Cloudinary...');
+      
+      cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
+      });
+      
+      console.log('Cloudinary config check:');
+      console.log('Cloud name:', cloudinary.config().cloud_name);
+      console.log('API key:', cloudinary.config().api_key);
+      console.log('API secret:', cloudinary.config().api_secret ? '***' + cloudinary.config().api_secret.slice(-4) : 'undefined');
       
       const uploadStream = cloudinary.uploader.upload_stream(
         { resource_type: 'auto' },

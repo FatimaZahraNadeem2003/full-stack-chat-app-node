@@ -13,7 +13,15 @@ const path = require('path');
 const { PassThrough } = require('stream');
 const cors = require('cors');
 
-dotenv.config();
+const envPath = path.resolve(__dirname, '.env');
+console.log('Loading .env from:', envPath);
+dotenv.config({ path: envPath });
+
+console.log('Environment variables loaded:');
+console.log('PORT:', process.env.PORT);
+console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME);
+console.log('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY);
+console.log('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? '***' + process.env.CLOUDINARY_API_SECRET.slice(-4) : 'undefined');
 connectDB();
 const app = express();
 
