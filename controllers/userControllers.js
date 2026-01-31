@@ -17,6 +17,12 @@ const registerUser = asyncHandler(async (req,res) =>{
       throw new Error('User already exists');
    }
 
+   const userNameExists = await User.findOne({name: { $regex: new RegExp(`^${name}$`, 'i') }});
+   if(userNameExists){
+      res.status(400);
+      throw new Error('Username already exists');
+   }
+
    const user = await User.create({
       name,
       email,
