@@ -2,27 +2,11 @@ const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const cloudinary = require('../config/cloudinary');
 
 const router = express.Router();
 
-const uploadDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    console.log('Upload directory:', uploadDir);
-    console.log('Directory exists:', fs.existsSync(uploadDir));
-    cb(null, uploadDir);
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const filename = file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname);
-    console.log('Generated filename:', filename);
-    cb(null, filename);
-  }
-});
+const storage = multer.memoryStorage(); 
 
 const fileFilter = (req, file, cb) => {
   const allowedTypes = [
@@ -30,10 +14,12 @@ const fileFilter = (req, file, cb) => {
     'image/png',
     'image/gif',
     'image/webp',
+    'image/svg+xml',
     'video/mp4',
     'video/avi',
     'video/mov',
     'video/wmv',
+    'video/quicktime',
     'application/pdf',
     'application/zip',
     'application/x-rar-compressed',
@@ -60,11 +46,11 @@ const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024 
+    fileSize: 50 * 1024 * 1024 
   }
 });
 
-router.post('/upload', (req, res, next) => {
+router.post('/', (req, res, next) => {
   upload.single('file')(req, res, function (err) {
     if (err instanceof multer.MulterError) {
       console.error('Multer error:', err);
@@ -83,31 +69,35 @@ router.post('/upload', (req, res, next) => {
         return res.status(400).json({ message: 'No file uploaded' });
       }
 
-      console.log('File uploaded successfully:', req.file.filename);
-      const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
-      console.log('Generated file URL:', fileUrl);
+      console.log('Uploading to Cloudinary...');
       
-      res.status(200).json({
-        message: 'File uploaded successfully',
-        fileUrl: fileUrl,
-        fileName: req.file.filename,
-        fileType: req.file.mimetype
-      });
+      const uploadStream = cloudinary.uploader.upload_stream(
+        { resource_type: 'auto' },
+        (error, result) => {
+          if (error) {
+            console.error('Cloudinary upload error:', error);
+            return res.status(500).json({ message: 'Cloudinary upload failed', error: error.message });
+          }
+          
+          console.log('File uploaded to Cloudinary successfully:', result.secure_url);
+          
+          res.status(200).json({
+            message: 'File uploaded successfully',
+            fileUrl: result.secure_url,
+            fileName: req.file.originalname,
+            fileType: req.file.mimetype,
+            publicId: result.public_id
+          });
+        }
+      );
+      
+      uploadStream.end(req.file.buffer);
+      
     } catch (error) {
       console.error('Upload error:', error);
       res.status(500).json({ message: 'File upload failed', error: error.message });
     }
   });
 });
-
-router.use('/uploads', (req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-}, express.static(uploadDir));
 
 module.exports = router;

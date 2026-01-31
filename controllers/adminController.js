@@ -75,6 +75,7 @@ const getAllChats = asyncHandler(async (req, res) => {
             .populate('users', '-password')
             .populate('groupAdmin', '-password')
             .populate('latestMessage')
+            .populate('blockedBy')
             .sort({ updatedAt: -1 });
         
         res.json(chats);
