@@ -158,4 +158,27 @@ const changePassword = asyncHandler(async (req, res) => {
    }
 });
 
-module.exports = {registerUser, authUser, allUsers, createGuestUser, updateUserProfile, changePassword};
+const searchAdmin = asyncHandler(async (req, res) => {
+   try {
+      const Admin = require('../models/adminModel');
+      const admin = await Admin.findOne({ name: { $regex: req.query.search, $options: "i" } });
+      
+      if (admin) {
+         // Return admin info without revealing it's an admin
+         res.json({
+            _id: admin._id,
+            name: admin.name,
+            email: admin.email,
+            pic: admin.pic || 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
+            isAdmin: false // Hide admin status from users
+         });
+      } else {
+         res.status(404).json({ message: 'Admin not found' });
+      }
+   } catch (error) {
+      res.status(400);
+      throw new Error(error.message);
+   }
+});
+
+module.exports = {registerUser, authUser, allUsers, createGuestUser, updateUserProfile, changePassword, searchAdmin};
