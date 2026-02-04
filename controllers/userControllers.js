@@ -164,13 +164,12 @@ const searchAdmin = asyncHandler(async (req, res) => {
       const admin = await Admin.findOne({ name: { $regex: req.query.search, $options: "i" } });
       
       if (admin) {
-         // Return admin info without revealing it's an admin
          res.json({
             _id: admin._id,
             name: admin.name,
             email: admin.email,
             pic: admin.pic || 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg',
-            isAdmin: false // Hide admin status from users
+            isAdmin: false 
          });
       } else {
          res.status(404).json({ message: 'Admin not found' });

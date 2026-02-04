@@ -128,7 +128,6 @@ const getAllMessages = asyncHandler(async (req, res) => {
 
 const getAdminGroups = asyncHandler(async (req, res) => {
     try {
-        // Get groups where admin is the group admin
         const adminCreatedGroups = await Chat.find({
             isGroupChat: true,
             groupAdmin: req.admin._id
@@ -147,7 +146,6 @@ const getAdminGroups = asyncHandler(async (req, res) => {
 
 const getGroupsAdminIsIn = asyncHandler(async (req, res) => {
     try {
-        // Get groups where admin is a member (but not necessarily admin)
         const groupsAdminIsIn = await Chat.find({
             isGroupChat: true,
             users: { $elemMatch: { $eq: req.admin._id } }
