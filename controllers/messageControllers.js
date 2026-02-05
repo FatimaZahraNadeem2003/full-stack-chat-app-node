@@ -4,7 +4,7 @@ const User = require('../models/userModel')
 const Chat = require('../models/chatModel')
 
 const sendMessage = asyncHandler(async(req,res) => {
-    const {content, chatId, fileUrl, fileName, fileType} = req.body;
+    const {content, chatId, fileUrl, fileName, fileType, replyTo} = req.body;
 
     if((!content && !fileUrl) || !chatId){
         console.log('Invalid data passed into request');
