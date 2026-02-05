@@ -4,7 +4,7 @@ const User = require('../models/userModel')
 const Chat = require('../models/chatModel')
 
 const sendMessage = asyncHandler(async(req,res) => {
-    const {content, chatId, fileUrl, fileName, fileType} = req.body;
+    const {content, chatId, fileUrl, fileName, fileType, replyTo} = req.body;
 
     if((!content && !fileUrl) || !chatId){
         console.log('Invalid data passed into request');
@@ -45,6 +45,10 @@ const sendMessage = asyncHandler(async(req,res) => {
         newMessage.fileName = fileName;
         newMessage.fileType = fileType;
     }
+    
+    if (replyTo) {
+        newMessage.replyTo = replyTo;
+    }
 
     try {
         var message = await Message.create(newMessage);
@@ -75,7 +79,14 @@ const allMessages = asyncHandler(async (req,res) =>{
         if (isAdmin) {
             const messages = await Message.find({chat: req.params.chatId})
                 .populate('sender','name pic email')
-                .populate('chat');
+                .populate('chat')
+                .populate({
+                    path: 'replyTo',
+                    populate: {
+                        path: 'sender',
+                        select: 'name pic'
+                    }
+                });
             res.json(messages);
         } else {
             const chat = await Chat.findById(req.params.chatId);
@@ -91,7 +102,14 @@ const allMessages = asyncHandler(async (req,res) =>{
             
             const messages = await Message.find({chat: req.params.chatId})
                 .populate('sender','name pic email')
-                .populate('chat');
+                .populate('chat')
+                .populate({
+                    path: 'replyTo',
+                    populate: {
+                        path: 'sender',
+                        select: 'name pic'
+                    }
+                });
             res.json(messages);
         }
     } catch (error) {
@@ -102,6 +120,7 @@ const allMessages = asyncHandler(async (req,res) =>{
 
 const deleteMessage = asyncHandler(async (req, res) => {
     try {
+        console.log('Delete request received:', req.params.messageId, req.body);
         const message = await Message.findById(req.params.messageId);
         
         if (!message) {
@@ -109,15 +128,24 @@ const deleteMessage = asyncHandler(async (req, res) => {
             throw new Error('Message not found');
         }
         
-       if (message.sender.toString() !== req.user._id.toString()) {
-            res.status(401);
-            throw new Error('You can only delete your own messages');
+        // Check for deleteForEveryone in query params (converted to boolean)
+        const deleteForEveryone = req.query.deleteForEveryone === 'true';
+        console.log('deleteForEveryone value:', deleteForEveryone, 'raw query value:', req.query.deleteForEveryone);
+        
+        if (deleteForEveryone) {
+            if (message.sender.toString() !== req.user._id.toString()) {
+                res.status(401);
+                throw new Error('You can only delete messages for everyone that you sent');
+            }
+            
+            await Message.findByIdAndDelete(req.params.messageId);
+            res.json({ message: 'Message deleted for everyone' });
+        } else {
+            await Message.findByIdAndDelete(req.params.messageId);
+            res.json({ message: 'Message deleted for you' });
         }
-        
-        await Message.findByIdAndDelete(req.params.messageId);
-        
-        res.json({ message: 'Message deleted successfully' });
     } catch (error) {
+        console.error('Delete error:', error);
         res.status(400);
         throw new Error(error.message);
     }

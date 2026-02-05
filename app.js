@@ -77,8 +77,12 @@ io.on('connection', (socket) => {
 
     });
 
-    socket.on('typing', (room) => socket.in(room).emit('typing'));
-    socket.on('stop typing', (room) => socket.in(room).emit('stop typing'));
+    socket.on('typing', (data) => {
+        socket.in(data.chatId).emit('typing', { userId: data.userId, chatId: data.chatId });
+    });
+    socket.on('stop typing', (data) => {
+        socket.in(data.chatId).emit('stop typing', { userId: data.userId, chatId: data.chatId });
+    });
 
     socket.on('new message', (newMessageRecieved) => {
         var chat = newMessageRecieved.chat;
