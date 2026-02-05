@@ -120,6 +120,7 @@ const allMessages = asyncHandler(async (req,res) =>{
 
 const deleteMessage = asyncHandler(async (req, res) => {
     try {
+        console.log('Delete request received:', req.params.messageId, req.body);
         const message = await Message.findById(req.params.messageId);
         
         if (!message) {
@@ -127,7 +128,9 @@ const deleteMessage = asyncHandler(async (req, res) => {
             throw new Error('Message not found');
         }
         
-        const { deleteForEveryone } = req.body;
+        // Check for deleteForEveryone in query params (converted to boolean)
+        const deleteForEveryone = req.query.deleteForEveryone === 'true';
+        console.log('deleteForEveryone value:', deleteForEveryone, 'raw query value:', req.query.deleteForEveryone);
         
         if (deleteForEveryone) {
             if (message.sender.toString() !== req.user._id.toString()) {
@@ -138,11 +141,11 @@ const deleteMessage = asyncHandler(async (req, res) => {
             await Message.findByIdAndDelete(req.params.messageId);
             res.json({ message: 'Message deleted for everyone' });
         } else {
-          
             await Message.findByIdAndDelete(req.params.messageId);
             res.json({ message: 'Message deleted for you' });
         }
     } catch (error) {
+        console.error('Delete error:', error);
         res.status(400);
         throw new Error(error.message);
     }
