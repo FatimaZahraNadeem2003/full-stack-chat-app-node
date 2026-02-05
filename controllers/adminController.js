@@ -32,11 +32,12 @@ const registerAdmin = asyncHandler(async (req, res) => {
         throw new Error('Please enter all fields');
     }
 
-    const adminExists = await Admin.findOne({ email });
-
-    if (adminExists) {
+    // Check if ANY admin already exists (not just with the same email)
+    const existingAdmin = await Admin.findOne({});
+    
+    if (existingAdmin) {
         res.status(400);
-        throw new Error('Admin already exists');
+        throw new Error('An admin already exists. Only one admin is allowed.');
     }
 
     const admin = await Admin.create({
