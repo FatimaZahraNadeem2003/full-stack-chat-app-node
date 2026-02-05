@@ -45,6 +45,10 @@ const sendMessage = asyncHandler(async(req,res) => {
         newMessage.fileName = fileName;
         newMessage.fileType = fileType;
     }
+    
+    if (replyTo) {
+        newMessage.replyTo = replyTo;
+    }
 
     try {
         var message = await Message.create(newMessage);
@@ -109,14 +113,21 @@ const deleteMessage = asyncHandler(async (req, res) => {
             throw new Error('Message not found');
         }
         
-       if (message.sender.toString() !== req.user._id.toString()) {
-            res.status(401);
-            throw new Error('You can only delete your own messages');
+        const { deleteForEveryone } = req.body;
+        
+        if (deleteForEveryone) {
+            if (message.sender.toString() !== req.user._id.toString()) {
+                res.status(401);
+                throw new Error('You can only delete messages for everyone that you sent');
+            }
+            
+            await Message.findByIdAndDelete(req.params.messageId);
+            res.json({ message: 'Message deleted for everyone' });
+        } else {
+          
+            await Message.findByIdAndDelete(req.params.messageId);
+            res.json({ message: 'Message deleted for you' });
         }
-        
-        await Message.findByIdAndDelete(req.params.messageId);
-        
-        res.json({ message: 'Message deleted successfully' });
     } catch (error) {
         res.status(400);
         throw new Error(error.message);
