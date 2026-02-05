@@ -79,7 +79,14 @@ const allMessages = asyncHandler(async (req,res) =>{
         if (isAdmin) {
             const messages = await Message.find({chat: req.params.chatId})
                 .populate('sender','name pic email')
-                .populate('chat');
+                .populate('chat')
+                .populate({
+                    path: 'replyTo',
+                    populate: {
+                        path: 'sender',
+                        select: 'name pic'
+                    }
+                });
             res.json(messages);
         } else {
             const chat = await Chat.findById(req.params.chatId);
@@ -95,7 +102,14 @@ const allMessages = asyncHandler(async (req,res) =>{
             
             const messages = await Message.find({chat: req.params.chatId})
                 .populate('sender','name pic email')
-                .populate('chat');
+                .populate('chat')
+                .populate({
+                    path: 'replyTo',
+                    populate: {
+                        path: 'sender',
+                        select: 'name pic'
+                    }
+                });
             res.json(messages);
         }
     } catch (error) {
